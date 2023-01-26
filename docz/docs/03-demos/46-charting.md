@@ -4,7 +4,7 @@ title: Charting
 
 # Charting
 
-This demo focuses on how to display data in both a chart and a table using only a single shared piece of react state. We will use the react charting library [recharts](https://recharts.org/) and the data grid library [react-data-grid](https://adazzle.github.io/react-data-grid/#/common-features). The data has the following shape:
+This demo focuses on how to display data in both a chart and a table in react using only a single shared piece of state. We will use the react charting library [recharts](https://recharts.org/) and the data grid library [react-data-grid](https://adazzle.github.io/react-data-grid/#/common-features). The data has the following shape:
 
 ```ts title="src/App.tsx"
 interface Row {
@@ -21,6 +21,7 @@ This demo was tested against `react-data-grid 7.0.0-beta.22`, `React 18.2.0`, an
 
 :::
 
+## Reading Data
 The data is first read from a remote excel file. It is then transformed into an array of objects with an additional key `profit` derived from the revenue and costs, and then saved into react state.
 
 ```ts title="src/App.tsx"
@@ -44,6 +45,8 @@ useEffect(() => {
   }, []);
 ```
 
+## Displaying and Updating Data
+
 The data can then be rendered by both react-data-grid and recharts.
 ```jsx title="src/App.tsx"
 <ReactDataGrid
@@ -57,7 +60,7 @@ The data can then be rendered by both react-data-grid and recharts.
   onRowsChange={updateRows}
 />
 ```
-In the `ReactDataGrid`, `updateRows` is used to update the state if the user changes any of the values in the editable columns, also recalculating profit based on the updated values.
+In the `ReactDataGrid`, the `updateRows` function is used to update the state if the user changes any of the values in the editable columns, also recalculating profit based on the updated values.
 
 ```js
 const updateRows = (rows: Row[]) => {
@@ -162,4 +165,5 @@ function App() {
 export default App;
 ```
 
+## Live Demo
 <iframe src="https://charting-sheetjs.vercel.app/" width="825px" height="800px"/>
