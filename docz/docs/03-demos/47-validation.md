@@ -4,7 +4,7 @@ title: Validation with Zod
 
 # Validation with Zod
 
-This demo demonstrates how to use the TypeScript-first validation library Zod to validate an excel file. We will use the data grid library [react-data-grid](https://adazzle.github.io/react-data-grid/#/common-features) to display the validated data.
+This demo illustrates how to use the TypeScript-first validation library Zod and sheetJS to validate spreadsheet data. While this demo uses React, the same principles can be applied to validing spreadsheet data in any JavaScript framework or in vanilla JavaScript.
 
 
 
@@ -16,7 +16,9 @@ This demo was tested against `zod 3.20.2`, `React 18.2.0`, and `vite 4.0.0` on 2
 
 ## Defining a Zod Schema
 
-We first define a Zod schema for the data we want to validate. The validated data from the spreadsheet should be an array of objects with the following properties
+Zod uses schemas to define the structure of data. To be able to validate the spreadsheet data, we must first define a Zod schema for the data we want to validate.
+
+The validated data from the spreadsheet should be an array of objects, where each object represents a row in the spreadsheet. the Zod API provides the `z.object` function, which is used to define the schema for an object. The `z.object` function takes an object whose keys are the names of the properties and whose values are the schemas for the properties.
 
 
 ```ts title="src/App.tsx"
@@ -31,7 +33,7 @@ const rowSchema = z.object({
 
 <!-- Write something about how we will use zod to make an array of this schema -->
 
-A schema for the whole sheet is defined as an array of these rows:
+A schema for the whole sheet can then be defined as an array of these rows:
 ```ts
 const spreadsheetSchema = z.array(rowSchema);
 ```
@@ -58,15 +60,15 @@ const rowSchema = z.object({
 
 ## Static Type Inference with Zod
 
- As a TypeScript-first library, Zod will automatically infer the TypeScript type of the schema from the type of the object passed to `z.object`. This can be used to define a type for the validated data.
+ As a TypeScript-first library, Zod will automatically infer the TypeScript type of the schema from the type of the object passed to `z.object`. You can use `z.infer` to extract the inferred type from the schema.
 
  ```ts
 type Row = z.infer<typeof rowSchema>;
 
-type PeopleSpreadsheet = Row[];
+type Spreadsheet = Row[];
  ```
 
-The derived `Row` type looks like this:
+The derived `Row` type then looks like this:
     
 ```ts
 type Row = {
@@ -80,7 +82,7 @@ type Row = {
 
 ## Validating Data with the Zod Schema
 
-The `parse` method of the zod schema validates the values of the data against the schema. If the data is valid, it returns the data. If the data is invalid, it throws a `ZodError`.
+The `parse` method of a zod schema validates the values passed to the function against the schema. If the data is valid, it returns the data. If the data is invalid, it throws a `ZodError`.
 
 ```ts title="src/App.tsx"
 const f = await(
@@ -88,10 +90,10 @@ const f = await(
 ).arrayBuffer();
 const wb: WorkBook = read(f);
 const ws = wb.Sheets[wb.SheetNames[0]];
-const jsonData: PeopleSpreadsheet = utils.sheet_to_json(ws);
+const jsonData: Spreadsheet = utils.sheet_to_json(ws);
 
 try {
-  const validatedData: PeopleSpreadsheet = spreadsheetSchema.parse(jsonData);
+  const validatedData: Spreadsheet = spreadsheetSchema.parse(jsonData);
   setData(validatedData);
 } catch (e) {
   if (e instanceof ZodError) {
@@ -105,7 +107,9 @@ If you don't want to throw errors when validation fails, Zod also provides a `sa
 ```ts
 const result = spreadsheetSchema.safeParse(jsonData);
 if (!result.success) {
+  console.log(result.error);
   setErrorMessage("Spreadsheet contains invalid data");
+  
 }
 setData(result.data);
 ```
@@ -121,10 +125,10 @@ const fetchAndValidateData = async () => {
   ).arrayBuffer();
   const wb: WorkBook = read(f);
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const jsonData: PeopleSpreadsheet = utils.sheet_to_json(ws);
+  const jsonData: Spreadsheet = utils.sheet_to_json(ws);
 
   try {
-    const validatedData: PeopleSpreadsheet = await spreadsheetSchema.parseAsync(
+    const validatedData: Spreadsheet = await spreadsheetSchema.parseAsync(
       jsonData
     );
     setData(validatedData);
@@ -135,7 +139,6 @@ const fetchAndValidateData = async () => {
     }
   }
 };
-fetchAndValidateData();
 ```
 
 ## Full Demo
@@ -182,10 +185,10 @@ const rowSchema = z.object({
 const spreadsheetSchema = z.array(rowSchema);
 
 type Row = z.infer<typeof rowSchema>;
-type PeopleSpreadsheet = Row[];
+type Spreadsheet = Row[];
 
 function App() {
-  const [data, setData] = useState<PeopleSpreadsheet>([]);
+  const [data, setData] = useState<Spreadsheet>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -195,10 +198,10 @@ function App() {
       ).arrayBuffer();
       const wb: WorkBook = read(f);
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const jsonData: PeopleSpreadsheet = utils.sheet_to_json(ws);
+      const jsonData: Spreadsheet = utils.sheet_to_json(ws);
 
       try {
-        const validatedData: PeopleSpreadsheet =
+        const validatedData: Spreadsheet =
           await spreadsheetSchema.parseAsync(jsonData);
         setData(validatedData);
       } catch (e) {
@@ -225,3 +228,7 @@ function App() {
 
 export default App;
 ```
+
+## zod-xlsx
+[zod-xlsx](https://github.com/sidwebworks/zod-xlsx) is an extension of zod that can be used to validate entire xlsx files. It provides a `createValidator` function that takes in an xlsx workbook and creates a validator object. The validator object has a `validate` method that takes a zod schema as an argument and validates the data in the workbook against it. 
+View the [zod-xlsx documentation](https://github.com/sidwebworks/zod-xlsx#usage) for more details and a full example.
