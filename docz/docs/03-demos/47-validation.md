@@ -4,7 +4,7 @@ title: Validation with Zod
 
 # Validation with Zod
 
-This demo illustrates how to use the TypeScript-first validation library Zod and sheetJS to validate spreadsheet data. While this demo uses React, the same principles can be applied to validing spreadsheet data in any JavaScript framework or in vanilla JavaScript.
+This demo illustrates how to use the TypeScript-first validation library Zod and SheetJS to validate spreadsheet data. While this demo uses React, the same principles can be applied to validing spreadsheet data in any JavaScript framework or in vanilla JavaScript.
 
 
 
@@ -80,7 +80,7 @@ type Row = {
 }
 ```
 
-## Validating Data with the Zod Schema
+## Validating Data
 
 The `parse` method of a zod schema validates the values passed to the function against the schema. If the data is valid, it returns the data. If the data is invalid, it throws a `ZodError`.
 
