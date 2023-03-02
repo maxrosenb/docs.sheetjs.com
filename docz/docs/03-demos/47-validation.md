@@ -151,7 +151,7 @@ import { z, ZodError } from "zod";
 import "./App.css";
 import "react-data-grid/lib/styles.css";
 
-const columns = [ // react-data-grid column definitions
+const columns = [
   {
     key: "name",
     name: "Name",
@@ -174,8 +174,12 @@ const columns = [ // react-data-grid column definitions
   },
 ];
 
+const nameSchema = z.string().refine((s) => s.length < 50, {
+  message: "Name must be less than 50 characters",
+});
+
 const rowSchema = z.object({
-  name: z.string(),
+  name: nameSchema,
   age: z.number().int().min(0),
   gender: z.enum(["Male", "Female"]),
   country: z.string().optional(),
@@ -185,29 +189,34 @@ const rowSchema = z.object({
 const spreadsheetSchema = z.array(rowSchema);
 
 type Row = z.infer<typeof rowSchema>;
-type Spreadsheet = Row[];
+type PeopleSpreadsheet = Row[];
 
 function App() {
-  const [data, setData] = useState<Spreadsheet>([]);
+  const [data, setData] = useState<PeopleSpreadsheet>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAndValidateData = async () => {
       const f = await (
-        await fetch("http://maxrosenb.com/people_data.xlsx")
+        await fetch("http://localhost:8080/people_data_bad.xlsx")
       ).arrayBuffer();
       const wb: WorkBook = read(f);
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const jsonData: Spreadsheet = utils.sheet_to_json(ws);
+      const jsonData: PeopleSpreadsheet = utils.sheet_to_json(ws);
 
       try {
-        const validatedData: Spreadsheet =
+        const validatedData: PeopleSpreadsheet =
           await spreadsheetSchema.parseAsync(jsonData);
         setData(validatedData);
       } catch (e) {
         if (e instanceof ZodError) {
           console.log(e);
-          setErrorMessage("Error validating spreadsheet");
+          const indexOfFirstError = e.issues[0].path[0] as number;
+          const sheetRow = indexOfFirstError + 1;
+          setErrorMessage(
+            // error message indicated the index of the first error and the error message
+            `Error on row ${sheetRow} at column ${e.issues[0].path[1]}: ${e.issues[0].code}`
+          );
         }
       }
     };
@@ -227,6 +236,7 @@ function App() {
 }
 
 export default App;
+
 ```
 
 ## zod-xlsx

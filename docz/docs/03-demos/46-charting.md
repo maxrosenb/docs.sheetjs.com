@@ -100,7 +100,7 @@ function App() {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rawData = utils.sheet_to_json(ws);
 
-      const newData = rawData.map((d: any) => ({
+      const newData = rawData.map((d: y) => ({
         ...d,
         profit: d.revenue - d.costs,
       }));
